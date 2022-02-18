@@ -1,9 +1,9 @@
 <template>
-  <div class="modalWrapper">
+  <div :class="$style.modalWrapper">
     <div>
       <i>✖️</i>
     </div>
-    <div class="modal">
+    <div :class="$style.modal">
       <p>日付</p>
       <input type="text" />
       <button>保存</button>
@@ -15,4 +15,4 @@
 export default {};
 </script>
 
-<style scoped></style>
+<style module lang="scss"></style>
