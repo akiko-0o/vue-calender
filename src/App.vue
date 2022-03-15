@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div>
     <Calendar />
   </div>
 </template>
@@ -7,7 +7,6 @@
 import Calendar from './components/pages/Calendar.vue';
 
 export default {
-  name: 'App',
   components: {
     Calendar,
   },
