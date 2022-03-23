@@ -13,18 +13,16 @@
         <div v-if="n <= weekDays" :class="$style.calendar__week">
           {{ weekDay(n) }}
         </div>
-        <div v-if="isLastMonth(n)" :class="$style.calendar__lastMonth">
+        <div v-if="isLastMonth(n)" ref="lastMonthColor" :class="$style.calendar__lastMonth">
           {{ lastMonthLastDay + positionDiffNumber(n) }}
         </div>
-        <div
-          v-if="positionDiffNumber(n) > 0 && positionDiffNumber(n) <= thisMonthLastDay"
-          :class="$style.calendar__day"
-        >
+        <div v-if="isThisMonth(n)" :class="$style.calendar__day">
           {{ positionDiffNumber(n) }}
         </div>
-        <div v-if="positionDiffNumber(n) > thisMonthLastDay" :class="$style.calendar__nextMonth">
+        <div v-if="isNextMonth(n)" :class="$style.calendar__nextMonth">
           {{ positionDiffNumber(n) - thisMonthLastDay }}
         </div>
+        <div v-if="isHoliday">休日</div>
       </div>
     </div>
   </div>
@@ -39,6 +37,8 @@ export default {
     return {
       year: new Date().getFullYear(),
       month: new Date().getMonth(),
+      today: new Date(),
+      standardValue: 0,
     };
   },
   computed: {
@@ -59,29 +59,25 @@ export default {
     },
   },
   mounted() {
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth();
-    this.$refs.header.innerHTML = `${year}年 ${month + 1}月`;
-    const firstDay = new Date(year, month, 1); // 1日を取得
-    const startDayOfWeek = new Date(year, month, 1).getDay(); // 1日が何曜始まりか
-    const lastMonth = new Date(firstDay);
-    lastMonth.setDate(lastMonth.getDate() - startDayOfWeek); // 余ったセルの先月分
+    this.$refs.header.innerHTML = `${this.year}年 ${this.month + 1}月`;
+    fetch('https://holidays-jp.github.io/api/v1/date.json')
+      .then((response) => response.text())
+      .then((data) => console.log(data));
   },
   methods: {
     prev() {
-      const today = new Date();
-      const showDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      showDate.setMonth(showDate.getMonth() - 1);
+      const showDate = new Date(this.today.getFullYear(), this.today.getMonth(), 1);
+      showDate.setMonth(showDate.getMonth() + (this.standardValue -= 1));
+      this.year = showDate.getFullYear();
+      this.month = showDate.getMonth();
+      this.$refs.header.innerHTML = `${this.year}年 ${this.month + 1}月`;
     },
     next() {
-      const today = new Date();
-      const showDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      showDate.setMonth(showDate.getMonth() + 1);
-    },
-    createProcess(year, month) {
-      const startDayOfWeek = new Date(year, month, 1).getDay(); // 表示する月の1日の曜日
-      const endDate = new Date(year, month + 1, 0).getDate(); // 表示する月の末日
-      const lastMonthEndDate = new Date(year, month, 0).getDate(); // 表示する先月の末尾
+      const showDate = new Date(this.today.getFullYear(), this.today.getMonth(), 1);
+      showDate.setMonth(showDate.getMonth() + (this.standardValue += 1));
+      this.year = showDate.getFullYear();
+      this.month = showDate.getMonth();
+      this.$refs.header.innerHTML = `${this.year}年 ${this.month + 1}月`;
     },
     positionDiffNumber(n) {
       return n - this.dayOfWeek;
@@ -91,6 +87,12 @@ export default {
     },
     weekDay(n) {
       return WEEK[n - 1];
+    },
+    isNextMonth(n) {
+      return this.positionDiffNumber(n) > this.thisMonthLastDay;
+    },
+    isThisMonth(n) {
+      return this.positionDiffNumber(n) > 0 && this.positionDiffNumber(n) <= this.thisMonthLastDay;
     },
   },
 };
@@ -131,12 +133,20 @@ export default {
 }
 .calendar__week {
   font-size: 10px;
-  margin-top: 5px;
+  padding-top: 5px;
 }
 .calendar__day {
-  margin-top: 10px;
+  padding-top: 10px;
 }
 .calendar__nextMonth {
-  margin-top: 10px;
+  background-color: #f3f3f3;
+  height: 100%;
+  padding-top: 10px;
+}
+.calendar__lastMonth {
+  background-color: #f3f3f3;
+  height: 100%;
+  margin-top: -15px;
+  padding-top: 25px;
 }
 </style>
